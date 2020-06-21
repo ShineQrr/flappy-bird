@@ -5,6 +5,7 @@
     background-image: url('../images/sky.png');
 }
 
+/* 小鸟位置 */
 .bird{
     position: absolute;
     width: 30px;
@@ -13,6 +14,7 @@
     margin-left: -15px;
     top: 235px;
     background-image: url('../images/birds.png');
+    transition: top .3s linear;
 }
 
 .start{
@@ -25,6 +27,8 @@
     font-weight: bolder;
     left: 50%;
     margin-left: -100px;
+    cursor: pointer;
+    transition: all .3s linear;
 }
 
 /* start-white和start-blue不同时存在于一个元素上 */
@@ -45,6 +49,7 @@
     font-size: 24px;
     left: 50%;
     transform: translateX(-50%);
+    display: none;
 }
 
 .mask{
@@ -55,6 +60,7 @@
     bottom: 0;
     background-color: #000;
     opacity: 0.7;
+    display: none;
 }
 
 .end{
@@ -64,6 +70,7 @@
     transform: translateX(-50%);
     color: red;
     text-align: center;
+    display: none;
 }
 
 .end .over{
