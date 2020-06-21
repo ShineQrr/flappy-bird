@@ -35,11 +35,13 @@
 .start.start-white{
     color: #fff;
     font-size: 24px;
+    text-shadow: 1px 1px 1px #000;
 }
 
 .start.start-blue{
     color: #09f;
     font-size: 36px;
+    text-shadow: 1px 1px 1px  #fff;
 }
 
 .score{
