@@ -11,10 +11,14 @@ var bird = {
     // 触发小鸟飞动的变量,状态表示游戏是否开始
     startFlag: false,
     // 小鸟掉落的步进
-    birdStepBy: 0,
+    birdStepY: 0,
+    // 边界碰撞判断高度
     minTop: 0,
     maxTop: 570,
-
+    // 显示的柱子数目
+    pipeLength: 7,
+    // pipeArr用于存放所有柱子，从而避免每次刷新都重新获取柱子dom
+    pipeArr: [],
     // init()初始化函数, 调用bird.init()即为调用其中对应的函数
     init() {
         this.initData();
@@ -42,8 +46,10 @@ var bird = {
         // 以下函数都由bird调用,this指向bird
         this.timer = setInterval(() => {
             self.skyMove();
+            // 当开始游戏，柱子移动，小鸟跳
             if (self.startFlag) {
-                this.birdDrop()
+                self.pipeMove();
+                self.birdDrop();
             }
             count++;
             if (count % 2 === 0) {
@@ -64,6 +70,19 @@ var bird = {
         this.skyPosition -= this.skyStep;
         this.el.style.backgroundPositionX = this.skyPosition + 'px'
     },
+    /** 
+     * 柱子移动 
+     */
+    pipeMove() {
+        // 获取所有的柱子, 后减去共同的移动值this.skyStep
+        for (let i = 0; i < this.pipeLength; i++) {
+            var oUpPipe = this.pipeArr[i].up;
+            var oDownPipe = this.pipeArr[i].down;
+            var pipeLeftPosition = oUpPipe.offsetLeft - this.skyStep;
+            oUpPipe.style.left = pipeLeftPosition + 'px';
+            oDownPipe.style.left = pipeLeftPosition + 'px';
+        }
+    },
 
     /**
      * 小鸟蹦跳
@@ -82,7 +101,7 @@ var bird = {
     * 小鸟掉落
     */
     birdDrop() {
-        this.birdTop += ++this.birdStepBy;
+        this.birdTop += ++this.birdStepY;
         this.oBird.style.top = this.birdTop + 'px';
         // 进行碰撞检测
         this.judgeKnock();
@@ -107,14 +126,15 @@ var bird = {
         if (this.birdTop < this.minTop || this.birdTop > this.maxTop) {
             this.failGame();
         }
-
     },
     // 进行柱子的碰撞检测
     judgePipe() { },
     // 所有关于事件的函数在handle中执行
     handle() {
         this.handleStart();
+        this.handleClick();
     },
+    // handleStart()为点击开始函数
     handleStart() {
         var self = this;
         this.oStart.onclick = function () {
@@ -123,13 +143,51 @@ var bird = {
             self.oScore.style.display = 'block';
             self.skyStep = 5;
             self.oBird.style.left = 30 + 'px';
+            // 点击开始后取消小鸟的过渡效果
+            self.oBird.style.transition = 'none'
+            // createPipe()创建柱子
+            for (let i = 0; i < self.pipeLength; i++) {
+                self.createPipe(300 * (i + 1));
+            }
         }
     },
+    handleClick() {
+        // 鼠标单击小鸟上跳
+        var self = this;
+        this.el.onclick = function (e) {
+            if (!e.target.classList.contains('start')) {
+                self.birdStepY = -10;
+            }
+        }
+    },
+    // 创建一组上下柱子
+    createPipe(leftDistance) {
+        // 设定上下柱子之间空隙为150px
+        var upHeight = 50 + Math.floor(Math.random() * 175)
+        var downHeight = 600 - 150 - upHeight;
+        var oUpPipe = createEle('div', ['pipe', 'pipe-top'], {
+            height: upHeight + 'px',
+            left: leftDistance + 'px'
+        });
+        var oDownPipe = createEle('div', ['pipe', 'pipe-bottom'], {
+            height: downHeight + 'px',
+            left: leftDistance + 'px'
+        });
+        this.el.appendChild(oUpPipe);
+        this.el.appendChild(oDownPipe);
+
+        this.pipeArr.push({
+            up: oUpPipe,
+            down: oDownPipe
+        })
+    },
+
     // failGame()游戏结束函数
     failGame() {
         clearInterval(this.timer);
         this.oMask.style.display = 'block';
         this.oEnd.style.display = 'block';
         this.oScore.style.display = 'none';
+        this.oBird.style.display = 'none';
     }
 };
