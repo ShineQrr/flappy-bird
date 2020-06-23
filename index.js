@@ -16,9 +16,13 @@ var bird = {
     minTop: 0,
     maxTop: 570,
     // 显示的柱子数目
-    pipeLength: 7,
+    pipeNum: 7,
     // pipeArr用于存放所有柱子，从而避免每次刷新都重新获取柱子dom
     pipeArr: [],
+    // 得分
+    score: 0,
+    // 最后一根柱子的索引
+    pipeLastIndex: 6,
     // init()初始化函数, 调用bird.init()即为调用其中对应的函数
     init() {
         this.initData();
@@ -75,12 +79,23 @@ var bird = {
      */
     pipeMove() {
         // 获取所有的柱子, 后减去共同的移动值this.skyStep
-        for (let i = 0; i < this.pipeLength; i++) {
-            var oUpPipe = this.pipeArr[i].up;
-            var oDownPipe = this.pipeArr[i].down;
-            var pipeLeftPosition = oUpPipe.offsetLeft - this.skyStep;
-            oUpPipe.style.left = pipeLeftPosition + 'px';
-            oDownPipe.style.left = pipeLeftPosition + 'px';
+        for (let i = 0; i < this.pipeNum; i++) {
+            var oUpperPipe = this.pipeArr[i].upper;
+            var oLowerPipe = this.pipeArr[i].lower;
+            var pipeLeftPosition = oUpperPipe.offsetLeft - this.skyStep;
+
+            // 柱子本身宽度为52px，当柱子left小于-52px,则在视野中消失
+            if (pipeLeftPosition < -52) {
+                // 获取最后一根柱子的left值lastPipeLeft
+                var lastPipeLeft = this.pipeArr[this.pipeLastIndex].upper.offsetLeft;
+                oUpperPipe.style.left = lastPipeLeft + 300 + 'px';
+                oLowerPipe.style.left = lastPipeLeft + 300 + 'px';
+                this.pipeLastIndex = ++this.pipeLastIndex % this.pipeNum;
+                // 将当前柱子移至最后柱子后300px处，不再需要执行步进，因此用continue跳出本次循环
+                continue;
+            }
+            oUpperPipe.style.left = pipeLeftPosition + 'px';
+            oLowerPipe.style.left = pipeLeftPosition + 'px';
         }
     },
 
@@ -105,6 +120,7 @@ var bird = {
         this.oBird.style.top = this.birdTop + 'px';
         // 进行碰撞检测
         this.judgeKnock();
+        this.addScore();
     },
     /**
     * 点击开始
@@ -128,7 +144,24 @@ var bird = {
         }
     },
     // 进行柱子的碰撞检测
-    judgePipe() { },
+    judgePipe() {
+        var index = this.score % this.pipeNum;
+        // 小鸟经过第一组柱子，当小鸟高度为上柱子bottom或下柱子top，发生碰撞
+        var pipeY = this.pipeArr[index].y;
+        var pipeX = this.pipeArr[index].upper.offsetLeft;
+        var birdY = this.birdTop;
+        if ((pipeX <= 95 && pipeX >= 13) && (birdY <= pipeY[0] || birdY >= pipeY[1])) {
+            this.failGame();
+        }
+    },
+    // addScore()加分
+    addScore() {
+        var index = this.score % this.pipeNum;
+        var pipeX = this.pipeArr[index].upper.offsetLeft;
+        if (pipeX < 13) {
+            this.oScore.innerText = ++this.score;
+        }
+    },
     // 所有关于事件的函数在handle中执行
     handle() {
         this.handleStart();
@@ -142,11 +175,11 @@ var bird = {
             self.oStart.style.display = 'none';
             self.oScore.style.display = 'block';
             self.skyStep = 5;
-            self.oBird.style.left = 30 + 'px';
+            self.oBird.style.left = 80 + 'px';
             // 点击开始后取消小鸟的过渡效果
             self.oBird.style.transition = 'none'
             // createPipe()创建柱子
-            for (let i = 0; i < self.pipeLength; i++) {
+            for (let i = 0; i < self.pipeNum; i++) {
                 self.createPipe(300 * (i + 1));
             }
         }
@@ -158,27 +191,32 @@ var bird = {
             if (!e.target.classList.contains('start')) {
                 self.birdStepY = -10;
             }
-        }
+            // self.judgePipe();
+        };
     },
     // 创建一组上下柱子
     createPipe(leftDistance) {
         // 设定上下柱子之间空隙为150px
-        var upHeight = 50 + Math.floor(Math.random() * 175)
-        var downHeight = 600 - 150 - upHeight;
-        var oUpPipe = createEle('div', ['pipe', 'pipe-top'], {
-            height: upHeight + 'px',
+        // 上柱子高度为upperPipeHeight，下柱子高度为lowerPipeHeight
+        var upperPipeHeight = 50 + Math.floor(Math.random() * 175)
+        var lowerPipeHeight = 600 - 150 - upperPipeHeight;
+        // oUpperPipe为上柱子dom
+        var oUpperPipe = createEle('div', ['pipe', 'pipe-top'], {
+            height: upperPipeHeight + 'px',
             left: leftDistance + 'px'
         });
-        var oDownPipe = createEle('div', ['pipe', 'pipe-bottom'], {
-            height: downHeight + 'px',
+        // oLowerPipe为下柱子dom
+        var oLowerPipe = createEle('div', ['pipe', 'pipe-bottom'], {
+            height: lowerPipeHeight + 'px',
             left: leftDistance + 'px'
         });
-        this.el.appendChild(oUpPipe);
-        this.el.appendChild(oDownPipe);
+        this.el.appendChild(oUpperPipe);
+        this.el.appendChild(oLowerPipe);
 
         this.pipeArr.push({
-            up: oUpPipe,
-            down: oDownPipe
+            upper: oUpperPipe,
+            lower: oLowerPipe,
+            y: [upperPipeHeight, upperPipeHeight + 150]
         })
     },
 
