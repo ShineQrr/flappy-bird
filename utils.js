@@ -18,3 +18,34 @@ function createEle(eleName, classArr, styleObj) {
     }
     return dom;
 }
+
+/**
+* @description 存、取数据
+*/
+function setLocal(key, value) {
+    // 若value为Object类型，则进行转换
+    if (typeof value === 'object' && value !== null) {
+        value = JSON.stringify(value)
+    }
+    localStorage.setItem(key, value);
+}
+
+function getLocal(key) {
+    var value = localStorage.getItem(key);
+    if (value === null) {
+        return value
+    };
+    // 当value为一个数组或对象
+    if (value[0] === '[' || value[0] === '{') {
+        return JSON.parse(value)
+    }
+    return value
+}
+
+// 对时间格式化，若为个位数，则前面添0
+function formatNum(num) {
+    if (num < 10) {
+        return '0' + num
+    }
+    return num;
+}

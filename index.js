@@ -23,11 +23,16 @@ var bird = {
     score: 0,
     // 最后一根柱子的索引
     pipeLastIndex: 6,
+
     // init()初始化函数, 调用bird.init()即为调用其中对应的函数
     init() {
         this.initData();
         this.animate();
         this.handle();
+        // 如果当前的session中有一个play，就说明是重新开始
+        if (sessionStorage.getItem('play')) {
+            this.startGame();
+        }
     },
 
     // initData()进行初始化数据
@@ -39,8 +44,17 @@ var bird = {
         this.oScore = this.el.getElementsByClassName('score')[0];
         this.oMask = this.el.getElementsByClassName('mask')[0];
         this.oEnd = this.el.getElementsByClassName('end')[0];
+        this.oFinalScore = this.oEnd.getElementsByClassName('final-score')[0];
+        this.oRankList = this.oEnd.getElementsByClassName('rank-list')[0];
+        this.oReStart = this.oEnd.getElementsByClassName('restart')[0];
+        this.scoreArr = this.getScore();
     },
-
+    // 获取本地的数据score
+    getScore() {
+        // 第一次取数据，键值不存在, 值为null
+        var scoreArr = getLocal('score');
+        return scoreArr ? scoreArr : [];
+    },
     // animate()用于管理所有动画函数
     animate() {
         // 引入count计数,利用count%10 判断。背景移动30ms执行一次,小鸟移动300ms执行一次
@@ -91,6 +105,11 @@ var bird = {
                 oUpperPipe.style.left = lastPipeLeft + 300 + 'px';
                 oLowerPipe.style.left = lastPipeLeft + 300 + 'px';
                 this.pipeLastIndex = ++this.pipeLastIndex % this.pipeNum;
+                // 重新获取柱子高度
+                var newPipeHeight = this.getPipeHeight();
+                oUpperPipe.style.height = newPipeHeight.upper + 'px';
+                oLowerPipe.style.height = newPipeHeight.lower + 'px';
+
                 // 将当前柱子移至最后柱子后300px处，不再需要执行步进，因此用continue跳出本次循环
                 continue;
             }
@@ -121,6 +140,15 @@ var bird = {
         // 进行碰撞检测
         this.judgeKnock();
         this.addScore();
+    },
+    // 获取上下柱子高度
+    getPipeHeight() {
+        var upperPipeHeight = 50 + Math.floor(Math.random() * 175)
+        var lowerPipeHeight = 600 - 150 - upperPipeHeight;
+        return {
+            upper: upperPipeHeight,
+            lower: lowerPipeHeight
+        }
     },
     /**
     * 点击开始
@@ -166,22 +194,23 @@ var bird = {
     handle() {
         this.handleStart();
         this.handleClick();
+        this.handleReStart();
     },
     // handleStart()为点击开始函数
     handleStart() {
-        var self = this;
-        this.oStart.onclick = function () {
-            self.startFlag = true;
-            self.oStart.style.display = 'none';
-            self.oScore.style.display = 'block';
-            self.skyStep = 5;
-            self.oBird.style.left = 80 + 'px';
-            // 点击开始后取消小鸟的过渡效果
-            self.oBird.style.transition = 'none'
-            // createPipe()创建柱子
-            for (let i = 0; i < self.pipeNum; i++) {
-                self.createPipe(300 * (i + 1));
-            }
+        this.oStart.onclick = this.startGame.bind(this);
+    },
+    startGame() {
+        this.startFlag = true;
+        this.oStart.style.display = 'none';
+        this.oScore.style.display = 'block';
+        this.skyStep = 5;
+        this.oBird.style.left = 80 + 'px';
+        // 点击开始后取消小鸟的过渡效果
+        this.oBird.style.transition = 'none'
+        // createPipe()创建柱子
+        for (let i = 0; i < this.pipeNum; i++) {
+            this.createPipe(300 * (i + 1));
         }
     },
     handleClick() {
@@ -193,6 +222,16 @@ var bird = {
             }
             // self.judgePipe();
         };
+    },
+    // 重新开始游戏
+    handleReStart() {
+        this.oReStart.onclick = function () {
+            // 点击重新开始，不是从开始游戏的页面起
+            sessionStorage.setItem('play', true);
+            // 刷新页面
+            window.location.reload();
+
+        }
     },
     // 创建一组上下柱子
     createPipe(leftDistance) {
@@ -219,13 +258,67 @@ var bird = {
             y: [upperPipeHeight, upperPipeHeight + 150]
         })
     },
-
+    // 存储分数
+    setScore() {
+        this.scoreArr.push({
+            score: this.score,
+            time: this.getCurrentTime(),
+        })
+        // 对分数进行排序
+        this.scoreArr.sort(function (a, b) {
+            return b.score - a.score;
+        })
+        setLocal('score', this.scoreArr);
+    },
+    // 获取当前时间
+    getCurrentTime() {
+        var currentTime = new Date();
+        var year = formatNum(currentTime.getFullYear());
+        var mouth = formatNum(currentTime.getMonth() + 1);
+        var day = formatNum(currentTime.getDate());
+        var hour = formatNum(currentTime.getHours());
+        var minute = formatNum(currentTime.getMinutes());
+        var second = formatNum(currentTime.getSeconds());
+        return `${year}.${mouth}.${day} ${hour}:${minute}:${second}`;
+    },
     // failGame()游戏结束函数
     failGame() {
         clearInterval(this.timer);
+        // 当游戏失败，存储score
+        this.setScore();
         this.oMask.style.display = 'block';
         this.oEnd.style.display = 'block';
         this.oScore.style.display = 'none';
         this.oBird.style.display = 'none';
+        // Your Results显示当前score
+        this.oFinalScore.innerText = this.score;
+        this.renderRankList();
+    },
+    // 将得分渲染到排行中
+    renderRankList() {
+        var template = '';
+        shownListLength = this.scoreArr.length < 8 ? this.scoreArr.length : 8;
+        for (let i = 0; i < shownListLength; i++) {
+            var degreeClass = '';
+            switch (i) {
+                case 0:
+                    degreeClass = 'first'
+                    break;
+                case 1:
+                    degreeClass = 'second'
+                    break;
+                case 2:
+                    degreeClass = 'third'
+                    break;
+            }
+            template += `
+             <li class="rank-item">
+                    <span class="rank-degree ${degreeClass}">${i + 1}</span>
+                    <span class="rank-score">${this.scoreArr[i].score}</span>
+                    <span class="rank-time">${this.scoreArr[i].time}</span>
+                </li>
+            `
+            this.oRankList.innerHTML = template;
+        }
     }
 };
