@@ -48,10 +48,11 @@
     position: absolute;
     color: #fff;
     font-weight: bolder;
-    font-size: 26px;
+    font-size: 30px;
     left: 50%;
     transform: translateX(-50%);
     display: none;
+    z-index: 100;
 }
 /* 游戏结束的遮罩层 */
 .mask{

@@ -215,12 +215,10 @@ var bird = {
     },
     handleClick() {
         // 鼠标单击小鸟上跳
-        var self = this;
-        this.el.onclick = function (e) {
+        this.el.onclick = e => {
             if (!e.target.classList.contains('start')) {
-                self.birdStepY = -10;
+                this.birdStepY = -10;
             }
-            // self.judgePipe();
         };
     },
     // 重新开始游戏
@@ -297,7 +295,7 @@ var bird = {
     // 将得分渲染到排行中
     renderRankList() {
         var template = '';
-        shownListLength = this.scoreArr.length < 8 ? this.scoreArr.length : 8;
+        shownListLength = this.scoreArr.length < 7 ? this.scoreArr.length : 7;
         for (let i = 0; i < shownListLength; i++) {
             var degreeClass = '';
             switch (i) {
