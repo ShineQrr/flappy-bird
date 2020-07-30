@@ -3,26 +3,39 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport"
+        content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,minimal-ui">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="browsermode" content="application">
+    <meta name="full-screen" content="yes" />
+    <meta name="x5-fullscreen" content="true" />
+    <meta name="x5-page-mode" content="app" />
+    <meta name="360-fullscreen" content="true" />
     <title>Play Flappy Bird</title>
     <link rel="stylesheet" href="./assets/index.css">
     <link rel="stylesheet" href="./assets/reset.css">
+    <link rel="icon" href="./favicon.ico">
 
 </head>
 
 <body>
-    <div id="game">
-        <div class="bird"></div>
-        <div class="start start-white">点击开始</div>
-        <div class="score">0</div>
-        <div class="mask"></div>
-        <div class="end">
-            <div class="over">Game Over</div>
-            <div class="result">Your Result:</div>
-            <div class="final-score">0</div>
-            <ul class="rank-list">
-            </ul>
-            <div class="restart">重新开始</div>
+    <div class="game-wrapper">
+        <div id="game">
+            <div class="bird"></div>
+            <div class="start start-white">点击开始</div>
+            <div class="score">0</div>
+            <div class="mask"></div>
+            <div class="end">
+                <div class="over">Game Over</div>
+                <div class="result">Your Result:</div>
+                <div class="final-score">0</div>
+                <ul class="rank-list">
+                </ul>
+                <div class="restart">重新开始</div>
+            </div>
         </div>
     </div>
 </body>
